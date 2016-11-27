@@ -1,0 +1,20 @@
+
+import org.testng.annotations.*;
+
+public class UserDefinedTest {
+ @Test
+ public void defineTest() throws Exception {
+ /*
+ * Mention the Id(s), functionality(ies) here in the below 2
+ * dimensional array (for multiple pages and functionalities, please
+ * enter in the order of execution)
+ */
+ String[][] pageFuctionalities = { { "1", "Sign in" },{ "2", "search" } };
+ AppTest appTest = new AppTest();
+ appTest.setPageFunctionalities(pageFuctionalities);
+ appTest.setBaseURL("http://www.yahoo.com/");
+ appTest.setOutputFileName("outputMyTest");
+ appTest.setScreenshotName("Screenshot");
+ appTest.runTest();
+ }
+}

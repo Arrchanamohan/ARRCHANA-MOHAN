@@ -1,0 +1,318 @@
+import com.pilanisoftlabs.TestElements.*;
+import com.pilanisoftlabs.TestElements.Image;
+import java.util.concurrent.TimeUnit;
+import jxl.format.*;
+import jxl.format.CellFormat;
+import jxl.format.Colour;
+import jxl.write.*;
+import static org.junit.Assert.*;
+import org.openqa.selenium.*;
+import org.openqa.selenium.firefox.FirefoxDriver;
+import org.openqa.selenium.ie.InternetExplorerDriver;
+import org.openqa.selenium.chrome.ChromeDriver;
+import org.testng.annotations.AfterClass;
+import org.testng.annotations.BeforeClass;
+import org.testng.annotations.Test;
+import java.io.File;
+import jxl.*;
+import org.openqa.selenium.chrome.ChromeDriverService;
+import org.openqa.selenium.remote.DesiredCapabilities;
+import org.openqa.selenium.remote.RemoteWebDriver;
+import java.sql.*;
+
+@SuppressWarnings("unused")
+public class TestConfig {
+ private WebDriver driver;
+ private String baseUrl = "http://www.google.com/";
+ private StringBuffer verificationErrors = new StringBuffer();
+ private int counter = 1;
+ private boolean result;
+ private String actualResult;
+ private WritableWorkbook workbook;
+ private WritableSheet sheet;
+ private int rowCounter = 4;
+ private Integer passCounter = 0;
+ private Integer failCounter = 0;
+ private String tableName = "";
+ private String outputFileName = "";
+ private String screenshotName = "";
+
+public void setBaseUrl(String baseUrl) {
+ this.baseUrl = baseUrl;
+ }
+
+public void setTableName(String tableName) {
+ this.tableName = tableName;
+ }
+
+public void setOutputFileName(String outputFileName) {
+ this.outputFileName = outputFileName;
+ }
+
+public void setScreenshotName(String screenshotName) {
+ this.screenshotName = screenshotName;
+ }
+
+@BeforeClass
+ public void setUp() throws Exception {
+ driver = new FirefoxDriver();
+ driver.manage().timeouts().implicitlyWait(30, TimeUnit.SECONDS);
+ driver.get(baseUrl);
+
+ workbook = Workbook.createWorkbook(new File("test-output/"
+ + outputFileName + ".xls"));
+ sheet = workbook.createSheet("output", 0);
+ WritableFont writableFont = new WritableFont(WritableFont.ARIAL, 10,
+ WritableFont.BOLD);
+ WritableCellFormat writableCellFormat = new WritableCellFormat(
+ writableFont);
+
+ Label l1 = new Label(0, 3, "Name", writableCellFormat);
+ Label l2 = new Label(1, 3, "Expected Result", writableCellFormat);
+ Label l3 = new Label(2, 3, "Actual Result", writableCellFormat);
+ Label l4 = new Label(3, 3, "Cause", writableCellFormat);
+ Label l5 = new Label(4, 3, "Status", writableCellFormat);
+ sheet.addCell(l1);
+ sheet.addCell(l2);
+ sheet.addCell(l3);
+ sheet.addCell(l4);
+ sheet.addCell(l5);
+ }
+
+@Test()
+ public void testElements() throws Exception {
+ Connection conn = null;
+ try {
+ Class.forName("com.mysql.jdbc.Driver");
+ conn = DriverManager
+ .getConnection(
+ "jdbc:mysql://connection_string/database_name",
+ "user_name", "password");
+ } catch (SQLException e) {
+ e.printStackTrace();
+ } catch (ClassNotFoundException e) {
+ e.printStackTrace();
+ }
+ ResultSet resultSet = null;
+ PreparedStatement preparedStatement = conn
+ .prepareStatement("select * from " + tableName);
+ resultSet = preparedStatement.executeQuery();
+
+ while (resultSet.next()) {
+ String property = resultSet.getString(1);
+ String locator = resultSet.getString(2);
+ String locatorType = resultSet.getString(3);
+ String value = resultSet.getString(4);
+ String expectedResult = resultSet.getString(5);
+ String permission = resultSet.getString(6);
+ String name = resultSet.getString(7);
+
+ System.out.println("Currentis " + property + ", " + locator
+ + ", " + locatorType + ", " + value + ", " + expectedResult
+ + ", " + permission + ", " + name);
+
+ // Start of Page Title testing block
+ if (property.equals("pagetitle")) {
+ PageTitle title = new PageTitle(driver, property, locator,
+ locatorType, value, expectedResult, permission, name);
+ result = title.testPageTitle();
+ actualResult = title.getActualResult();
+ updateResult(result, name, expectedResult, title.getCause());
+ }
+ // End of Page Title testing block
+
+ // Start of Link testing block, used to click on links and get title
+ // tag of links
+ if (property.equals("link")) {
+ Link link = new Link(driver, property, locator, locatorType,
+ value, expectedResult, permission, name);
+ result = link.testLink();
+ actualResult = link.getActualResult();
+ updateResult(result, name, expectedResult, link.getCause());
+ String fileLocation = "test-output/Screenshot/"
+ + screenshotName + counter + ".png";
+ ScreenShot ss = new ScreenShot(driver, fileLocation);
+ ss.takeScreenshot();
+ counter++;
+ }
+ // End of Link testing block
+
+ // Start of Image testing block used to click on images and to test
+ // alttag for them
+ if (property.equals("image")) {
+ Image image = new Image(driver, property, locator, locatorType,
+ value, expectedResult, permission, name);
+ result = image.testImage();
+ actualResult = image.getActualResult();
+ updateResult(result, name, expectedResult, image.getCause());
+ }
+ // End of Image testing block
+
+ // Start of Dropdown testing block, used to select a value from
+ // dropdown, to find out number of elements and to show all the
+ // elements
+ if (property.equals("dropdown")) {
+ DropDown dropDown = new DropDown(driver, property, locator,
+ locatorType, value, expectedResult, permission, name);
+ result = dropDown.testDropDown();
+ actualResult = dropDown.getActualResult();
+ updateResult(result, name, expectedResult, dropDown.getCause());
+ }
+ // End of Dropdown testing block
+
+ // Start of Text Box testing block, used to test if text box is
+ // editable, to write values in them
+ if (property.equals("textbox")) {
+ TextBox textBox = new TextBox(driver, property, locator, locatorType, value, expectedResult,
+ permission, name);
+ result = textBox.testTextBox();
+ actualResult = textBox.getActualResult();
+ updateResult(result, name, expectedResult, textBox.getCause());
+ }
+ // End of Text Box testing block
+
+ // Start of Radio Button testing block, used to test if radio button
+ // is clickable, to click a particual radio button
+ if (property.equals("radio")) {
+ Radio radio = new Radio(driver, property, locator, locatorType,
+ value, expectedResult, permission, name);
+ result = radio.testRadio();
+ actualResult = radio.getActualResult();
+ updateResult(result, name, expectedResult, radio.getCause());
+ }
+ // End of Radio Button testing block
+
+ // Start of Check Box testing block, used to test if check box is
+ // clickable, to select some check boxes
+ if (property.equals("checkbox")) {
+ CheckBox checkBox = new CheckBox(driver, property, locator,
+ locatorType, value, expectedResult, permission, name);
+ result = checkBox.testCheckBox();
+ actualResult = checkBox.getActualResult();
+ updateResult(result, name, expectedResult, checkBox.getCause());
+ }
+ // End of Check Box testing block
+
+ // Start of text checking block, used to test presence of specific
+ // text in a page
+ if (property.equals("text")) {
+ Text text = new Text(driver, property, locator, locatorType,
+ value, expectedResult, permission, name);
+ result = text.testText();
+ actualResult = text.getActualResult();
+ updateResult(result, name, expectedResult, text.getCause());
+ }
+ // End of text checking block
+
+ // Start of URL testing block, used to get the URL being displayed
+ // for a page
+ if (property.equals("url")) {
+ Url url = new Url(driver, property, locator, locatorType,
+ value, expectedResult, permission, name);
+ url.setBaseURL(baseUrl);
+ result = url.testUrl();
+ actualResult = url.getActualResult();
+ updateResult(result, name, expectedResult, url.getCause());
+ }
+ // End of URL testing block
+
+ // Start of value testing block used to test the value present in
+ // any object
+ if (property.equals("value")) {
+ ValueTest valueTest = new ValueTest(driver, property, locator,
+ locatorType, value, expectedResult, permission, name);
+ result = valueTest.testValue();
+ actualResult = valueTest.getActualResult();
+ updateResult(result, name, expectedResult, valueTest.getCause());
+ }
+ // End of value testing block
+
+ // Start of Object finder block
+ if (property.equals("object")) {
+ ObjectFinder objectFinder = new ObjectFinder(driver, property,
+ locator, locatorType, value, expectedResult,
+ permission, name);
+ result = objectFinder.testObjectPresent();
+ actualResult = objectFinder.getActualResult();
+ updateResult(result, name, expectedResult,
+ objectFinder.getCause());
+ }
+ // End of object finder block
+
+ if (property.equals("pop up window")) {
+ NewWindow newWindow = new NewWindow(driver, property, locator,
+ locatorType, value, expectedResult, permission, name);
+ result = newWindow.testNewWindow();
+ actualResult = newWindow.getActualResult();
+ updateResult(result, name, expectedResult, newWindow.getCause());
+ }
+ }
+
+}
+
+@AfterClass
+ public void tearDown() throws Exception {
+ WritableFont writableFont = new WritableFont(WritableFont.ARIAL, 10,
+ WritableFont.BOLD);
+ WritableCellFormat writableCellFormat = new WritableCellFormat(
+ writableFont);
+ Label l1 = new Label(0, 0, "Steps Passed", writableCellFormat);
+ Label l2 = new Label(1, 0, passCounter.toString(), writableCellFormat);
+ sheet.addCell(l1);
+ sheet.addCell(l2);
+ Label l3 = new Label(0, 1, "Steps Failed", writableCellFormat);
+ Label l4 = new Label(1, 1, failCounter.toString(), writableCellFormat);
+ sheet.addCell(l3);
+ sheet.addCell(l4);
+ workbook.write();
+ workbook.close();
+ System.out.println("Closedfile ...");
+ driver.quit();
+ String verificationErrorString = verificationErrors.toString();
+ if (!"".equals(verificationErrorString)) {
+ fail(verificationErrorString);
+ }
+ }
+
+private boolean isElementPresent(By by) {
+ try {
+ driver.findElement(by);
+ return true;
+ } catch (NoSuchElementException e) {
+ return false;
+ }
+ }
+
+private void updateResult(boolean bool, String name, String expectedResult,
+ String cause) throws Exception {
+ Label label1 = new Label(0, rowCounter, name);
+ Label label2 = new Label(1, rowCounter, expectedResult);
+ Label label3 = new Label(2, rowCounter, actualResult);
+ Label label4 = new Label(3, rowCounter, cause);
+ sheet.addCell(label1);
+ sheet.addCell(label2);
+ sheet.addCell(label3);
+ sheet.addCell(label4);
+ if (result) {
+ WritableFont writableFont = new WritableFont(WritableFont.ARIAL,
+ 10, WritableFont.BOLD);
+ WritableCellFormat writableCellFormat = new WritableCellFormat(
+ writableFont);
+ writableCellFormat.setBackground(Colour.GREEN);
+ Label label5 = new Label(4, rowCounter, "Pass", writableCellFormat);
+ passCounter++;
+ sheet.addCell(label5);
+ } else {
+ WritableFont writableFont = new WritableFont(WritableFont.ARIAL,
+ 10, WritableFont.BOLD);
+ WritableCellFormat writableCellFormat = new WritableCellFormat(
+ writableFont);
+ writableCellFormat.setBackground(Colour.RED);
+ Label label5 = new Label(4, rowCounter, "Fail", writableCellFormat);
+ failCounter++;
+ sheet.addCell(label5);
+ }
+ rowCounter++;
+ }
+
+}

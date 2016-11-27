@@ -1,0 +1,79 @@
+
+import org.testng.annotations.*;
+import java.io.StringWriter;
+import java.sql.*;
+import java.util.ArrayList;
+import java.util.List;
+
+@SuppressWarnings("unused")
+public class AppTest {
+ private String pageFunctionalities[][];
+ private String baseURL;
+ private String outputFileName;
+ private String screenshotName;
+
+public void setPageFunctionalities(String pageFunctionalities[][]) {
+ this.pageFunctionalities = pageFunctionalities;
+ }
+
+public void setBaseURL(String baseURL) {
+ this.baseURL = baseURL;
+ }
+
+public void setOutputFileName(String outputFileName) {
+ this.outputFileName = outputFileName;
+ }
+
+public void setScreenshotName(String screenshotName) {
+ this.screenshotName = screenshotName;
+ }
+
+@Test
+ public void runTest() throws Exception {
+ Connection conn = null;
+ try {
+ Class.forName("com.mysql.jdbc.Driver");
+ conn = DriverManager
+ .getConnection(
+ "jdbc:mysql://connection_string/database_name",
+ "user_name", "password");
+ } catch (SQLException e) {
+ e.printStackTrace();
+ } catch (ClassNotFoundException e) {
+ e.printStackTrace();
+ }
+ List tables = new ArrayList();
+ System.out.println("Theh of the two dimensional array is "
+ + pageFunctionalities.length);
+ for (int i = 0; i < pageFunctionalities.length; i++) {
+ ResultSet resultSet = null;
+ System.out.println("ID pageFunctionalities[i][0] + " Functionality: "
+ + pageFunctionalities[i][1]);
+ PreparedStatement preparedStatement = conn
+ .prepareStatement("select TableForFunctionality from auto_tabData where Id = '"
+ + pageFunctionalities[i][0]
+ + "' and Functionality = '"
+ + pageFunctionalities[i][1] + "'");
+ resultSet = preparedStatement.executeQuery();
+ System.out.println("Queryution Count: " + i);
+ while (resultSet.next()) {
+ tables.add(resultSet.getString(1));
+ }
+ }
+ System.out.println("Thees to be executed are as below");
+ for (String val : tables) {
+ System.out.println(val);
+ }
+ TestConfig testConfig = new TestConfig();
+ testConfig.setBaseUrl(baseURL);
+ testConfig.setOutputFileName(outputFileName);
+ testConfig.setScreenshotName(screenshotName);
+ testConfig.setUp();
+ for (String val : tables) {
+ System.out.println("Tableg executed: " + val);
+ testConfig.setTableName(val);
+ testConfig.testElements();
+ }
+ testConfig.tearDown();
+ }
+}
