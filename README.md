@@ -5,3 +5,5 @@ ISTQB, EXIN TMap NEXT TEST ENGINEER
 EXIN Agile Scrum 
 Microsoft Proffestional 
 Oracle SQL Expert
+ Book Reviewer:
+ Automation Framework reviewer for software automation testing secrets revealed part-2
